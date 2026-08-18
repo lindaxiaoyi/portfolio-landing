@@ -22,6 +22,13 @@
   .hint-arrow-up { animation-delay: -1s; }
   @media (prefers-reduced-motion: reduce) { .hint-arrow { animation: none; } }
   ::selection { background: #D9D3F0; color: #2B2B33; }
+  /* The scene is a fixed 1600x820 composition that simply scales. Fill the
+     viewport when it is wider than that ratio; once it is narrower, hug the
+     scene instead so it does not float in a band of empty space. */
+  .stage { height: calc(100vh - 80px); height: calc(100svh - 80px); min-height: 240px; }
+  @media (max-aspect-ratio: 1600 / 820) {
+    .stage { height: auto; min-height: 0; padding: 6vh 0; }
+  }
 </style>
 </helmet>
 
@@ -29,8 +36,7 @@
 
 <audio ref="{{ audioRef }}" src="audio/ambient.mp3" loop="loop" preload="auto"></audio>
 
-<sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
-<div style="position: relative; width: 100%; height: calc(100vh - 80px); display: flex; align-items: center; justify-content: center; overflow: hidden">
+<div class="stage" style="position: relative; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden">
   <div style="position: absolute; inset: 0; background-image: linear-gradient(180deg, #FEF9F2 0%, #F6EDE2 55%, #FFFFFF 100%)"></div>
   <div style="position: relative; width: 100%; max-width: 1920px; aspect-ratio: 1600 / 820; max-height: 100%">
 
@@ -131,7 +137,7 @@
       <g transform="translate(0,70)">
       <g ref="{{ crateRef }}" opacity="0.78" style="transition: opacity 900ms ease">
         <sc-for list="{{ sleeves }}" as="s" hint-placeholder-count="5">
-          <g data-i="{{ $index }}" tabindex="0" role="button" aria-label="{{ s.title }} — liner notes" onKeyDown="{{ onSleeveKey }}" onMouseEnter="{{ onDiscEnter }}" onMouseLeave="{{ onDiscLeave }}" onFocus="{{ onDiscEnter }}" onBlur="{{ onDiscLeave }}" style="cursor: default; transition: transform 300ms cubic-bezier(.2,.7,.3,1)" style-hover="transform: translateX(-10px)" style-focus="transform: translateX(-10px)">
+          <g data-i="{{ $index }}" tabindex="0" role="button" aria-label="{{ s.title }} — liner notes" onKeyDown="{{ onSleeveKey }}" onClick="{{ onDiscTap }}" onMouseEnter="{{ onDiscEnter }}" onMouseLeave="{{ onDiscLeave }}" onFocus="{{ onDiscEnter }}" onBlur="{{ onDiscLeave }}" style="cursor: pointer; touch-action: manipulation; transition: transform 300ms cubic-bezier(.2,.7,.3,1)" style-hover="transform: translateX(-10px)" style-focus="transform: translateX(-10px)">
             <g filter="url(#risoSoft)">
               <rect x="{{ s.bx }}" y="{{ s.by }}" width="170" height="16" rx="2" fill="{{ s.color }}"></rect>
               <rect x="{{ s.bx }}" y="{{ s.by }}" width="170" height="3" fill="#FFFFFF" opacity="0.4"></rect>
@@ -291,90 +297,6 @@
   </div>
     <div style="position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; opacity: 0.35; -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 88%, transparent 100%); mask-image: linear-gradient(180deg, #000 0%, #000 88%, transparent 100%); background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E&quot;)"></div>
 </div>
-</sc-if>
-
-<sc-if value="{{ isMobile }}">
-<div style="padding: 18px 20px 40px">
-  <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
-    <a href="#top" style="font-weight: 300; font-size: 20px; color: #2B2B33">Linda Xiao</a>
-    <a href="#work" style="font-size: 12.5px; color: #8A8A96; border: 1px solid #E4E3EF; border-radius: 999px; padding: 10px 14px">Selected Projects ↙</a>
-  </div>
-
-  <div style="position: relative; margin: 18px -20px 0">
-    <svg viewBox="0 0 800 300" width="100%" height="auto" style="display: block">
-      <rect x="0" y="0" width="800" height="256" fill="#EDEDF7"></rect>
-      <rect x="0" y="256" width="800" height="44" fill="#E0DFEC"></rect>
-      <rect x="40" y="186" width="720" height="70" fill="#8A5F44"></rect>
-      <rect x="40" y="186" width="720" height="7" fill="#C79A66"></rect>
-      <rect x="60" y="198" width="680" height="42" fill="#4A3524"></rect>
-      <rect ref="{{ glowRefM }}" x="60" y="198" width="680" height="42" fill="#F0B25E" opacity="0.12" style="transition: opacity 900ms ease"></rect>
-      <g>
-        <rect x="76" y="220" width="280" height="16" fill="#9BAF9B"></rect>
-        <rect x="76" y="200" width="280" height="16" fill="#D08B6E"></rect>
-        <rect x="76" y="180" width="280" height="16" fill="#C9C3E6"></rect>
-      </g>
-      <g>
-        <rect x="90" y="70" width="290" height="116" fill="#F3F1EC"></rect>
-        <rect x="90" y="70" width="290" height="6" fill="#FFFFFF"></rect>
-        <circle cx="196" cy="128" r="52" fill="#3A3A44"></circle>
-        <g ref="{{ recordRefM }}" style="transform-origin: 196px 128px">
-          <circle cx="196" cy="128" r="46" fill="#26262E"></circle>
-          <circle cx="196" cy="128" r="34" fill="none" stroke="#4A4A55" stroke-width="2"></circle>
-          <circle cx="196" cy="128" r="15" fill="#D08B6E"></circle>
-          <rect x="193" y="94" width="6" height="12" fill="#EFECE2" opacity="0.8"></rect>
-        </g>
-        <g ref="{{ armRefM }}" transform="rotate(0 350 164)" tabindex="0" role="button" aria-label="Tonearm — tap or press Enter to start and stop the record" onKeyDown="{{ onArmKey }}" onClick="{{ onArmClick }}" style="cursor: pointer">
-          <rect x="216" y="142" width="150" height="44" fill="#3A3A44" opacity="0"></rect>
-          <rect x="236" y="160" width="116" height="8" rx="4" fill="#4A4A55"></rect>
-          <rect x="230" y="154" width="20" height="16" rx="3" fill="#3A3A44"></rect>
-          <circle cx="350" cy="164" r="9" fill="#3A3A44"></circle>
-        </g>
-      </g>
-    </svg>
-  </div>
-
-  <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0 0">
-    <span style="font-weight: 300; font-size: 12px; color: #8A8A96">tap the tonearm for sound</span>
-    <button onClick="{{ toggleMute }}" aria-label="Toggle sound" style="font-family: 'Poppins', sans-serif; font-size: 12.5px; color: #6E6E7A; background: #FFFFFF; border: 1px solid #E4E3EF; border-radius: 999px; padding: 10px 15px; min-height: 44px; cursor: pointer">{{ muteLabel }}</button>
-  </div>
-
-  <div style="padding: 24px 0 6px">
-    <h1 style="font-weight: 300; font-size: 34px; line-height: 1.12; margin: 0 0 8px">Hi! I'm Linda.</h1>
-    <p style="font-weight: 300; font-size: 16.5px; line-height: 1.5; color: #4A4A55; margin: 0; text-wrap: pretty">A multidisciplinary Product Designer powered by visual design, storytelling, and motion.</p>
-    <div style="display: flex; flex-direction: column; gap: 4px; margin: 16px 0 0; font-weight: 300; font-size: 14px; line-height: 1.45; color: #6E6E7A">
-      <div>Master's in HCI + Design @ University of Washington 🎓</div>
-      <div>Previous UX/UI Designer @ Cathay Pacific ✈️</div>
-    </div>
-  </div>
-
-  <div style="margin: 20px -20px 0; padding: 4px 20px 20px; display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch">
-    <sc-for list="{{ sleeves }}" as="s" hint-placeholder-count="5">
-      <button data-i="{{ $index }}" onClick="{{ onSleeve }}" style="flex: 0 0 auto; width: 168px; min-height: 168px; scroll-snap-align: start; border: 1px solid #E4E3EF; border-radius: 14px; background: #FFFFFF; padding: 16px; text-align: left; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; gap: 24px">
-        <span style="display: block; width: 44px; height: 6px; border-radius: 3px; background: #C9C3E6"></span>
-        <span style="font-weight: 300; font-size: 14px; line-height: 1.35; color: #2B2B33">{{ s.short }}</span>
-      </button>
-    </sc-for>
-  </div>
-
-  <sc-if value="{{ card }}">
-    <div role="dialog" style="background: #FFFFFF; border: 1px solid #E4E3EF; border-radius: 16px; padding: 22px 20px; margin: 0 0 8px">
-      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; border-bottom: 1px solid #EDEDF7; padding-bottom: 12px">
-        <div style="font-weight: 300; font-size: 22px; line-height: 1.1">{{ card.title }}</div>
-        <button onClick="{{ closeCard }}" aria-label="Close liner notes" style="font-family: 'Poppins', sans-serif; font-size: 14px; color: #8A8A96; background: none; border: 0; cursor: pointer; min-height: 44px; min-width: 44px">✕</button>
-      </div>
-      <div style="display: grid; grid-template-columns: 72px 1fr; gap: 6px 14px; padding: 14px 0 2px; font-weight: 300; font-size: 13px; line-height: 1.5; color: #4A4A55">
-        <div style="color: #A5A5B0; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase">Role</div><div>{{ card.role }}</div>
-        <div style="color: #A5A5B0; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase">Years</div><div>{{ card.years }}</div>
-        <div style="color: #A5A5B0; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase">Tools</div><div>{{ card.tools }}</div>
-        <div style="color: #A5A5B0; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase">With</div><div>{{ card.credits }}</div>
-      </div>
-      <p style="margin: 12px 0 0; font-weight: 300; font-size: 15px; line-height: 1.6; color: #4A4A55; text-wrap: pretty">{{ card.note }}</p>
-      <p style="margin: 10px 0 0; font-weight: 300; font-size: 12px; color: #A5A5B0">Placeholder liner notes — swap in your own.</p>
-    </div>
-  </sc-if>
-</div>
-</sc-if>
-
 <div id="work" style="height: 1px"></div>
 </div>
 
@@ -389,23 +311,18 @@ const SLEEVES = [
 ];
 
 class Component extends DCLogic {
-  state = { engaged: false, muted: false, active: null, isMobile: false, ready: false, hoverIndex: null };
+  state = { engaged: false, muted: false, active: null, hoverIndex: null };
 
   constructor(props) {
     super(props);
-    ["recordRef","recordRefM","armRef","armRefM","glowRef","glowRefM","crateRef","dimRef","hintRef","audioRef","coverRef"].forEach((k) => { this[k] = React.createRef(); });
+    ["recordRef","armRef","glowRef","crateRef","dimRef","hintRef","audioRef","coverRef"].forEach((k) => { this[k] = React.createRef(); });
     this.angle = 0;
   }
 
   componentDidMount() {
-    this.mqM = window.matchMedia("(max-width: 900px)");
     this.mqR = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => {
-      this.reduced = this.mqR.matches;
-      this.setState({ isMobile: this.mqM.matches, ready: true });
-    };
+    const sync = () => { this.reduced = this.mqR.matches; };
     sync();
-    this.mqM.addEventListener("change", sync);
     this.mqR.addEventListener("change", sync);
     this.onMove = (e) => this.moveDrag(e);
     this.onUp = () => this.endDrag();
@@ -429,31 +346,26 @@ class Component extends DCLogic {
   setArm(a) {
     this.angle = a;
     if (this.armRef.current) this.armRef.current.setAttribute("transform", "rotate(" + a.toFixed(2) + " 1472 604)");
-    if (this.armRefM.current) this.armRefM.current.setAttribute("transform", "rotate(" + (a * 0.6).toFixed(2) + " 350 164)");
   }
 
   warm() {
-    [this.glowRef.current, this.glowRefM.current].forEach((g) => { if (g) g.setAttribute("opacity", "0.42"); });
+    if (this.glowRef.current) this.glowRef.current.setAttribute("opacity", "0.42");
     if (this.crateRef.current) this.crateRef.current.setAttribute("opacity", "1");
   }
 
   spin() {
     if (this.reduced) return;
-    [this.recordRef.current, this.recordRefM.current].forEach((r) => {
-      if (r && !r.style.animation) r.style.animation = "omSpin 7.5s linear infinite";
-    });
+    const rec = this.recordRef.current;
+    if (rec && !rec.style.animation) rec.style.animation = "omSpin 7.5s linear infinite";
   }
 
   cool() {
     if (this.glowRef.current) this.glowRef.current.setAttribute("opacity", "0");
-    if (this.glowRefM.current) this.glowRefM.current.setAttribute("opacity", "0.12");
     if (this.crateRef.current) this.crateRef.current.setAttribute("opacity", "0.78");
   }
 
   stopSpin() {
-    [this.recordRef.current, this.recordRefM.current].forEach((r) => {
-      if (r) r.style.animation = "";
-    });
+    if (this.recordRef.current) this.recordRef.current.style.animation = "";
   }
 
   engage() {
@@ -546,6 +458,14 @@ class Component extends DCLogic {
   };
   closeCard = () => this.setState({ active: null });
 
+  // Touch devices never fire mouseenter, so a tap has to drive the crate too.
+  // On real hover devices a click just re-asserts the sleeve already showing.
+  onDiscTap = (e) => {
+    const i = Number(e.currentTarget.getAttribute("data-i"));
+    const canHover = window.matchMedia("(hover: hover)").matches;
+    this.setState((s) => ({ hoverIndex: !canHover && s.hoverIndex === i ? null : i }));
+  };
+
   onDiscEnter = (e) => this.setState({ hoverIndex: Number(e.currentTarget.getAttribute("data-i")) });
   onDiscLeave = (e) => {
     const i = Number(e.currentTarget.getAttribute("data-i"));
@@ -581,7 +501,7 @@ class Component extends DCLogic {
   };
 
   renderVals() {
-    const { isMobile, muted, active, ready, hoverIndex, engaged } = this.state;
+    const { muted, active, hoverIndex, engaged } = this.state;
     const sleeves = SLEEVES.map((s, i) => ({
       ...s,
       bx: 1020,
@@ -607,23 +527,19 @@ class Component extends DCLogic {
     const shown = hoverIndex !== null ? hoverIndex : active;
     if (shown !== null) this.lastIndex = shown;
     return {
-      isMobile: ready && isMobile,
-      isDesktop: !ready || !isMobile,
       sleeves,
       hoverCover: sleeves[this.lastIndex || 0],
       coverOpacity: shown !== null ? 1 : 0,
       coverTransform: shown !== null ? "translate(0,0)" : "translate(0,18)",
       onDiscEnter: this.onDiscEnter,
       onDiscLeave: this.onDiscLeave,
+      onDiscTap: this.onDiscTap,
       card: active === null ? null : SLEEVES[active],
       muteLabel: muted ? "sound off" : "sound on",
       muted,
       recordRef: this.recordRef,
-      recordRefM: this.recordRefM,
       armRef: this.armRef,
-      armRefM: this.armRefM,
       glowRef: this.glowRef,
-      glowRefM: this.glowRefM,
       crateRef: this.crateRef,
       dimRef: this.dimRef,
       hintRef: this.hintRef,
