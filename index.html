@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500&display=swap" />
 <style>
-  html, body { margin: 0; padding: 0; background: #FFFFFF; color: #2B2B33; }
+  html, body { margin: 0; padding: 0; background: transparent; color: #2B2B33; }
   * { box-sizing: border-box; }
   a { color: #6B5FA8; text-decoration: none; }
   a:hover { color: #4A3F86; }
@@ -22,13 +22,13 @@
   .hint-arrow-up { animation-delay: -1s; }
   @media (prefers-reduced-motion: reduce) { .hint-arrow { animation: none; } }
   ::selection { background: #D9D3F0; color: #2B2B33; }
-  /* The scene is a fixed 1600x820 composition that simply scales. Fill the
-     viewport when it is wider than that ratio; once it is narrower, hug the
-     scene instead so it does not float in a band of empty space. */
-  .stage { height: calc(100vh - 80px); height: calc(100svh - 80px); min-height: 240px; }
-  @media (max-aspect-ratio: 1600 / 820) {
-    .stage { height: auto; min-height: 0; padding: 6vh 0; }
-  }
+  /* The viewBox is cropped to the artwork's own bounds, so the page is only
+     ever as tall as the illustration — no viewport filling, no letterboxing. */
+  .stage { height: auto; }
+  /* support.js injects html,body{height:100%} and #dc-root>.sc-host{height:100%}
+     into <head> at boot, which floors the document at viewport height. It lands
+     after this block, so opting out needs !important. */
+  html, body, #dc-root, #dc-root > .sc-host { height: auto !important; }
 </style>
 </helmet>
 
@@ -37,10 +37,9 @@
 <audio ref="{{ audioRef }}" src="audio/ambient.mp3" loop="loop" preload="auto"></audio>
 
 <div class="stage" style="position: relative; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden">
-  <div style="position: absolute; inset: 0; background-image: linear-gradient(180deg, #FEF9F2 0%, #F6EDE2 55%, #FFFFFF 100%)"></div>
-  <div style="position: relative; width: 100%; max-width: 1920px; aspect-ratio: 1600 / 820; max-height: 100%">
+  <div style="position: relative; width: 100%; max-width: 1920px; aspect-ratio: 1600 / 350">
 
-    <svg viewBox="0 0 1600 820" width="100%" height="100%" style="display: block" aria-hidden="true">
+    <svg viewBox="0 470 1600 350" width="100%" height="100%" style="display: block" aria-hidden="true">
       <defs>
         <filter id="riso" x="-6%" y="-6%" width="112%" height="112%">
           <feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="2" seed="9" result="warp"></feTurbulence>
@@ -133,7 +132,7 @@
       </g>
     </svg>
 
-    <svg viewBox="0 0 1600 820" width="100%" height="100%" style="display: block; position: absolute; inset: 0">
+    <svg viewBox="0 470 1600 350" width="100%" height="100%" style="display: block; position: absolute; inset: 0">
       <g transform="translate(0,70)">
       <g ref="{{ crateRef }}" opacity="0.78" style="transition: opacity 900ms ease">
         <sc-for list="{{ sleeves }}" as="s" hint-placeholder-count="5">
@@ -264,7 +263,7 @@
     </svg>
 
 
-    <div style="position: absolute; right: 5%; top: 88.7%; transform: translateY(-50%); display: flex; align-items: center">
+    <div style="position: absolute; right: 5%; top: 73.4%; transform: translateY(-50%); display: flex; align-items: center">
       <button onClick="{{ toggleMute }}" aria-label="Toggle sound" style="display: flex; align-items: center; justify-content: center; width: clamp(28px, 2.1vw, 38px); height: clamp(28px, 2.1vw, 38px); color: #6E6E7A; background: #FFFFFF; border: 1px solid #E4E3EF; border-radius: 999px; padding: 0; cursor: pointer" style-hover="border-color: #C9C3E6; color: #2B2B33">
         <sc-if value="{{ muted }}">
           <svg width="55%" height="55%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"></path><line x1="16" y1="9" x2="22" y2="15"></line><line x1="22" y1="9" x2="16" y2="15"></line></svg>
