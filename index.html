@@ -40,6 +40,11 @@
      a player edge at 1208 leaves 103 units either side, and the group's
      half-width is 41.85 per unit of scale, so the steps stop at 2.45 rather
      than fully compensating on the narrowest phones. */
+  /* One large tap target over the whole crate. The sleeves are ~4px tall on a
+     phone, so aiming at one is hopeless; a tap here cycles to the next album
+     instead. Inert on hover devices so per-sleeve hover keeps working. */
+  .crate-tap { fill: transparent; pointer-events: none; }
+  @media (hover: none) { .crate-tap { pointer-events: all; } }
   .hint-crate, .hint-play { transform-box: fill-box; }
   /* Bottom origin keeps x centred on the albums while the label grows upward.
      Scaling about the centre drove the arrowhead down into the crate, since it
@@ -170,6 +175,7 @@
           </g>
         </sc-for>
       </g>
+      <rect class="crate-tap" x="995" y="528" width="210" height="116" role="button" aria-label="Show the next album" onPointerDown="{{ onDiscPointerDown }}" onPointerUp="{{ onCratePointerUp }}" style="touch-action: manipulation"></rect>
       <g opacity="{{ coverOpacity }}" transform="{{ coverTransform }}" style="pointer-events: none; transition: opacity 300ms ease, transform 420ms cubic-bezier(.2,.7,.3,1)">
         <g filter="url(#risoSoft)">
           <circle cx="{{ hoverCover.discCx }}" cy="544" r="80" fill="#1C1B21"></circle>
@@ -508,6 +514,18 @@ class Component extends DCLogic {
     this.setState((s) => ({ hoverIndex: s.hoverIndex === i ? null : i }));
   };
 
+  // Whole-crate tap: advance to the next album and wrap. Cycling rather than
+  // toggling means every tap does something visible, which matters when the
+  // target is far too small to aim at.
+  onCratePointerUp = (e) => {
+    if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
+    this.lastTouchAt = Date.now();
+    const start = this.touchStart;
+    this.touchStart = null;
+    if (!start || Math.abs(e.clientX - start.x) > 12 || Math.abs(e.clientY - start.y) > 12) return;
+    this.setState((s) => ({ hoverIndex: s.hoverIndex === null ? 0 : (s.hoverIndex + 1) % SLEEVES.length }));
+  };
+
   recentTouch() { return Date.now() - (this.lastTouchAt || 0) < 700; }
 
   onDiscTap = (e) => {
@@ -589,6 +607,7 @@ class Component extends DCLogic {
       onDiscTap: this.onDiscTap,
       onDiscPointerDown: this.onDiscPointerDown,
       onDiscPointerUp: this.onDiscPointerUp,
+      onCratePointerUp: this.onCratePointerUp,
       card: active === null ? null : SLEEVES[active],
       muteLabel: muted ? "sound off" : "sound on",
       muted,
