@@ -162,7 +162,7 @@
       <g transform="translate(0,70)">
       <g ref="{{ crateRef }}" opacity="0.78" style="transition: opacity 900ms ease">
         <sc-for list="{{ sleeves }}" as="s" hint-placeholder-count="5">
-          <g data-i="{{ $index }}" tabindex="0" role="button" aria-label="{{ s.title }} — liner notes" onKeyDown="{{ onSleeveKey }}" onClick="{{ onDiscTap }}" onMouseEnter="{{ onDiscEnter }}" onMouseLeave="{{ onDiscLeave }}" onFocus="{{ onDiscEnter }}" onBlur="{{ onDiscLeave }}" style="cursor: pointer; touch-action: manipulation; transition: transform 300ms cubic-bezier(.2,.7,.3,1)" style-hover="transform: translateX(-10px)" style-focus="transform: translateX(-10px)">
+          <g data-i="{{ $index }}" tabindex="0" role="button" aria-label="{{ s.title }} — liner notes" onKeyDown="{{ onSleeveKey }}" onPointerDown="{{ onDiscPointerDown }}" onPointerUp="{{ onDiscPointerUp }}" onClick="{{ onDiscTap }}" onMouseEnter="{{ onDiscEnter }}" onMouseLeave="{{ onDiscLeave }}" onFocus="{{ onDiscEnter }}" onBlur="{{ onDiscLeave }}" style="cursor: pointer; touch-action: manipulation; transition: transform 300ms cubic-bezier(.2,.7,.3,1)" style-hover="transform: translateX(-10px)" style-focus="transform: translateX(-10px)">
             <g filter="url(#risoSoft)">
               <rect x="{{ s.bx }}" y="{{ s.by }}" width="170" height="16" rx="2" fill="{{ s.color }}"></rect>
               <rect x="{{ s.bx }}" y="{{ s.by }}" width="170" height="3" fill="#FFFFFF" opacity="0.4"></rect>
@@ -457,10 +457,12 @@ class Component extends DCLogic {
       if (!el || el.__omFocusBound) return !!el;
       el.__omFocusBound = true;
       el.addEventListener("focusin", (e) => {
+        if (this.recentTouch()) return;
         const g = e.target.closest && e.target.closest("g[data-i]");
         if (g) this.setState({ hoverIndex: Number(g.getAttribute("data-i")) });
       });
       el.addEventListener("focusout", () => {
+        if (this.recentTouch()) return;
         requestAnimationFrame(() => {
           const a = document.activeElement;
           if (!a || !a.closest || !a.closest("g[data-i]")) this.setState({ hoverIndex: null });
@@ -481,16 +483,44 @@ class Component extends DCLogic {
   };
   closeCard = () => this.setState({ active: null });
 
-  // Touch devices never fire mouseenter, so a tap has to drive the crate too.
-  // On real hover devices a click just re-asserts the sleeve already showing.
-  onDiscTap = (e) => {
-    const i = Number(e.currentTarget.getAttribute("data-i"));
-    const canHover = window.matchMedia("(hover: hover)").matches;
-    this.setState((s) => ({ hoverIndex: !canHover && s.hoverIndex === i ? null : i }));
+  // A touch tap emits a compatibility mouse sequence — pointerdown,
+  // mouseover/mouseenter, focusin, then click. Without this guard the
+  // mouseenter and focusin set hoverIndex, and the click that follows sees its
+  // own index already set and toggles it straight back off, so a tap did
+  // nothing. Record real touches and let the mouse/focus handlers stand down.
+  onDiscPointerDown = (e) => {
+    if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
+    this.lastTouchAt = Date.now();
+    this.touchStart = { x: e.clientX, y: e.clientY };
   };
 
-  onDiscEnter = (e) => this.setState({ hoverIndex: Number(e.currentTarget.getAttribute("data-i")) });
+  // Touch resolves here rather than on click. Safari can swallow click on SVG
+  // children, and waiting for it also means waiting out the synthetic mouse
+  // sequence, so pointerup is both more reliable and more immediate.
+  onDiscPointerUp = (e) => {
+    if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
+    this.lastTouchAt = Date.now();
+    const start = this.touchStart;
+    this.touchStart = null;
+    // A finger that travelled is a scroll, not a tap.
+    if (!start || Math.abs(e.clientX - start.x) > 12 || Math.abs(e.clientY - start.y) > 12) return;
+    const i = Number(e.currentTarget.getAttribute("data-i"));
+    this.setState((s) => ({ hoverIndex: s.hoverIndex === i ? null : i }));
+  };
+
+  recentTouch() { return Date.now() - (this.lastTouchAt || 0) < 700; }
+
+  onDiscTap = (e) => {
+    if (this.recentTouch()) return;  // touch already settled on pointerup
+    this.setState({ hoverIndex: Number(e.currentTarget.getAttribute("data-i")) });
+  };
+
+  onDiscEnter = (e) => {
+    if (this.recentTouch()) return;
+    this.setState({ hoverIndex: Number(e.currentTarget.getAttribute("data-i")) });
+  };
   onDiscLeave = (e) => {
+    if (this.recentTouch()) return;
     const i = Number(e.currentTarget.getAttribute("data-i"));
     this.setState((s) => (s.hoverIndex === i ? { hoverIndex: null } : null));
   };
@@ -557,6 +587,8 @@ class Component extends DCLogic {
       onDiscEnter: this.onDiscEnter,
       onDiscLeave: this.onDiscLeave,
       onDiscTap: this.onDiscTap,
+      onDiscPointerDown: this.onDiscPointerDown,
+      onDiscPointerUp: this.onDiscPointerUp,
       card: active === null ? null : SLEEVES[active],
       muteLabel: muted ? "sound off" : "sound on",
       muted,
