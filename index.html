@@ -29,6 +29,28 @@
      into <head> at boot, which floors the document at viewport height. It lands
      after this block, so opting out needs !important. */
   html, body, #dc-root, #dc-root > .sc-host { height: auto !important; }
+  /* The hints live in the SVG, so their size is scaled by canvasWidth/1600 —
+     about 3px on a phone. Scale each hint group back up as the canvas narrows
+     to hold the rendered text near 12px. Scaling the group rather than the
+     font-size keeps the arrow in proportion with its label.
+     The crate hint scales about its centre so it stays centred on the albums;
+     the play hint scales about its right edge so its arrow stays on the
+     tonearm and the text grows left into the empty space under the shelf.
+     Staying centred caps how large the crate label can get: centre 1105 against
+     a player edge at 1208 leaves 103 units either side, and the group's
+     half-width is 41.85 per unit of scale, so the steps stop at 2.45 rather
+     than fully compensating on the narrowest phones. */
+  .hint-crate, .hint-play { transform-box: fill-box; }
+  .hint-crate { transform-origin: center; }
+  /* 97.83% is where the arrowhead's tip sits in the group's own box, so scaling
+     about it pins the tip on the needle at every size instead of letting it
+     drift left as the label grows. */
+  .hint-play  { transform-origin: 97.83% center; }
+  @media (max-width: 1280px) { .hint-crate, .hint-play { transform: scale(1.15); } }
+  @media (max-width: 1024px) { .hint-crate, .hint-play { transform: scale(1.45); } }
+  @media (max-width: 820px)  { .hint-crate, .hint-play { transform: scale(1.85); } }
+  @media (max-width: 640px)  { .hint-crate, .hint-play { transform: scale(2.2); } }
+  @media (max-width: 480px)  { .hint-crate, .hint-play { transform: scale(2.45); } }
 </style>
 </helmet>
 
@@ -224,16 +246,16 @@
       </g>
 
 
-      <g pointer-events="none" aria-hidden="true" fill="#8A8A96" font-family="Poppins, sans-serif" font-weight="300" font-size="13" letter-spacing="0.06em" opacity="0.7">
+      <g class="hint-crate" pointer-events="none" aria-hidden="true" fill="#8A8A96" font-family="Poppins, sans-serif" font-weight="300" font-size="13" letter-spacing="0.06em" opacity="0.7">
         <path class="hint-arrow" d="M 1066.8 520.5 L 1066.8 531.5 M 1063.3 526 L 1066.8 531.5 L 1070.3 526" fill="none" stroke="#8A8A96" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
-        <text x="1075.3" y="534" text-anchor="start">hover/tap</text>
+        <text class="hint-label" x="1075.3" y="534" text-anchor="start">hover/tap</text>
       </g>
 
       <g ref="{{ hintRef }}" pointer-events="none" aria-hidden="true" style="transition: opacity 600ms ease">
         <sc-if value="{{ !engaged }}" hint-placeholder-val="{{ true }}">
-          <g fill="#8A8A96" font-family="Poppins, sans-serif" font-weight="300" font-size="13" letter-spacing="0.06em" opacity="0.7">
+          <g class="hint-play" fill="#8A8A96" font-family="Poppins, sans-serif" font-weight="300" font-size="13" letter-spacing="0.06em" opacity="0.7">
             <path class="hint-arrow hint-arrow-up" d="M 1407 725 L 1407 714 M 1403.5 719.5 L 1407 714 L 1410.5 719.5" fill="none" stroke="#8A8A96" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
-            <text x="1415.5" y="727" text-anchor="start">tap to play</text>
+            <text class="hint-label" x="1396" y="727" text-anchor="end">move needle to play</text>
           </g>
         </sc-if>
         <sc-if value="{{ engaged }}" hint-placeholder-val="{{ false }}">
