@@ -45,6 +45,13 @@
      instead. Inert on hover devices so per-sleeve hover keeps working. */
   .crate-tap { fill: transparent; pointer-events: none; }
   @media (hover: none) { .crate-tap { pointer-events: all; } }
+  /* riso/risoSoft (feTurbulence + feDisplacementMap) are typically
+     software-rasterized rather than GPU-composited, so they cost real CPU on
+     weaker devices even when static. Drop them on small/touch screens and
+     fall back to the shapes' own flat fills underneath. */
+  @media (max-width: 820px), (hover: none) {
+    .riso-filtered { filter: none; }
+  }
   .hint-crate, .hint-play { transform-box: fill-box; }
   /* Bottom origin keeps x centred on the albums while the label grows upward.
      Scaling about the centre drove the arrowhead down into the crate, since it
@@ -70,7 +77,7 @@
 <div class="stage" style="position: relative; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden">
   <div style="position: relative; width: 100%; max-width: 1920px; aspect-ratio: 1600 / 350">
 
-    <svg viewBox="0 470 1600 350" width="100%" height="100%" style="display: block" aria-hidden="true">
+    <svg ref="{{ baseSvgRef }}" viewBox="0 470 1600 350" width="100%" height="100%" style="display: block" aria-hidden="true">
       <defs>
         <filter id="riso" x="-6%" y="-6%" width="112%" height="112%">
           <feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="2" seed="9" result="warp"></feTurbulence>
@@ -93,7 +100,7 @@
 
       <ellipse cx="800" cy="684" rx="748" ry="18" fill="#8A6E62" opacity="0.16"></ellipse>
 
-      <g filter="url(#risoSoft)">
+      <g class="riso-filtered" filter="url(#risoSoft)">
         <path d="M 86 633 C 600 630 1100 631 1514 633 C 1522 643 1530 653 1536 662 C 1080 659 560 659 64 662 C 70 653 78 643 86 633 Z" fill="#C99A6A"></path>
         <path d="M 86 633 C 600 629 1100 630 1514 632 C 1514 635 1514 637 1515 639 C 1100 636 600 636 85 639 Z" fill="#DDB380" opacity="0.95"></path>
         <rect ref="{{ glowRef }}" x="84" y="632" width="1432" height="30" fill="#F0B25E" opacity="0" style="transition: opacity 900ms ease"></rect>
@@ -111,7 +118,7 @@
         </path>
       </g>
 
-      <g filter="url(#risoSoft)">
+      <g class="riso-filtered" filter="url(#risoSoft)">
         <path d="M 1228 426 C 1326 422 1402 422 1480 426 C 1474 458 1468 492 1462 526 C 1396 522 1318 522 1248 526 C 1242 492 1235 458 1228 426 Z" fill="#F4F1EA"></path>
         <path d="M 1242 438 C 1330 434 1400 434 1468 438 C 1463 466 1458 492 1453 516 C 1394 512 1320 512 1257 516 C 1252 492 1247 466 1242 438 Z" fill="#EAE4D8"></path>
         <path d="M 1247 443 C 1332 439 1398 439 1464 443 C 1459 468 1454 491 1449 512 C 1392 508 1322 508 1261 512 C 1256 491 1252 468 1247 443 Z" fill="#F7F4EC"></path>
@@ -167,7 +174,7 @@
       <g ref="{{ crateRef }}" opacity="0.78" style="transition: opacity 900ms ease">
         <sc-for list="{{ sleeves }}" as="s" hint-placeholder-count="5">
           <g data-i="{{ $index }}" tabindex="0" role="button" aria-label="{{ s.title }} — liner notes" onKeyDown="{{ onSleeveKey }}" onPointerDown="{{ onDiscPointerDown }}" onPointerUp="{{ onDiscPointerUp }}" onClick="{{ onDiscTap }}" onMouseEnter="{{ onDiscEnter }}" onMouseLeave="{{ onDiscLeave }}" onFocus="{{ onDiscEnter }}" onBlur="{{ onDiscLeave }}" style="cursor: pointer; touch-action: manipulation; transition: transform 300ms cubic-bezier(.2,.7,.3,1)" style-hover="transform: translateX(-10px)" style-focus="transform: translateX(-10px)">
-            <g filter="url(#risoSoft)">
+            <g class="riso-filtered" filter="url(#risoSoft)">
               <rect x="{{ s.bx }}" y="{{ s.by }}" width="170" height="16" rx="2" fill="{{ s.color }}"></rect>
               <rect x="{{ s.bx }}" y="{{ s.by }}" width="170" height="3" fill="#FFFFFF" opacity="0.4"></rect>
             </g>
@@ -176,7 +183,7 @@
       </g>
       <rect class="crate-tap" x="995" y="528" width="210" height="116" role="button" aria-label="Show the next album" onPointerDown="{{ onDiscPointerDown }}" onPointerUp="{{ onCratePointerUp }}" style="touch-action: manipulation"></rect>
       <g opacity="{{ coverOpacity }}" transform="{{ coverTransform }}" style="pointer-events: none; transition: opacity 300ms ease, transform 420ms cubic-bezier(.2,.7,.3,1)">
-        <g filter="url(#risoSoft)">
+        <g class="riso-filtered" filter="url(#risoSoft)">
           <circle cx="{{ hoverCover.discCx }}" cy="544" r="80" fill="#1C1B21"></circle>
           <circle cx="{{ hoverCover.discCx }}" cy="544" r="66" fill="none" stroke="#33323A" stroke-width="6"></circle>
           <circle cx="{{ hoverCover.discCx }}" cy="544" r="50" fill="none" stroke="#33323A" stroke-width="6"></circle>
@@ -279,7 +286,7 @@
 
       <g ref="{{ armRef }}" transform="rotate(0 1472 604)" tabindex="0" role="button" aria-label="Tonearm — drag onto the record to play; click or press Enter to start and stop" onKeyDown="{{ onArmKey }}" onPointerDown="{{ onArmDown }}" onClick="{{ onArmClick }}" style="cursor: grab; touch-action: none">
         <rect x="1414" y="580" width="74" height="46" fill="#3A3A44" opacity="0"></rect>
-        <g filter="url(#riso)">
+        <g class="riso-filtered" filter="url(#riso)">
           <rect x="1412" y="601.8" width="60" height="5.4" rx="2.7" fill="#E4E0D4"></rect>
           <rect x="1412" y="601.8" width="60" height="2.1" rx="1" fill="#FFFFFF" opacity="0.85"></rect>
           <path d="M 1420 601 L 1412 594 L 1403 597 L 1403 609 L 1414 610 Z" fill="#7C8C93"></path>
@@ -343,7 +350,7 @@ class Component extends DCLogic {
 
   constructor(props) {
     super(props);
-    ["recordRef","armRef","glowRef","crateRef","hintRef","audioRef","coverRef"].forEach((k) => { this[k] = React.createRef(); });
+    ["recordRef","armRef","glowRef","crateRef","hintRef","audioRef","coverRef","baseSvgRef"].forEach((k) => { this[k] = React.createRef(); });
     this.angle = 0;
   }
 
@@ -367,14 +374,14 @@ class Component extends DCLogic {
     // view on a long host page does not get throttled on its own — this
     // covers that case explicitly rather than relying on it.
     this.visible = true;
-    this.onVisChange = () => this.syncSpinGate();
+    this.onVisChange = () => this.syncMotionGate();
     document.addEventListener("visibilitychange", this.onVisChange);
     const stageEl = this.crateRef.current && this.crateRef.current.closest(".stage");
     if (stageEl && "IntersectionObserver" in window) {
       this.io = new IntersectionObserver(
         (entries) => {
           this.visible = entries[entries.length - 1].isIntersecting;
-          this.syncSpinGate();
+          this.syncMotionGate();
         },
         { threshold: 0 }
       );
@@ -394,11 +401,23 @@ class Component extends DCLogic {
 
   // Pauses/resumes the rotation only — engaged/audio state is untouched, so
   // playback picks the spin back up the instant the embed is visible again.
-  syncSpinGate() {
+  // Two independent animations to gate: the vinyl spin (CSS, only while
+  // playing) and the cat's walk-cycle (SMIL, unconditional from page load —
+  // path-shape morphing is heavier than a transform since it forces layout
+  // every frame, not just compositing). Both pause the instant the embed is
+  // hidden or scrolled off-screen and resume the instant it is not, since an
+  // iframe off-screen on a long host page is not covered by browsers'
+  // automatic background-tab throttling.
+  syncMotionGate() {
+    const canAnimate = this.visible && !document.hidden;
+    const svg = this.baseSvgRef.current;
+    if (svg && typeof svg.pauseAnimations === "function") {
+      if (canAnimate) svg.unpauseAnimations();
+      else svg.pauseAnimations();
+    }
     if (!this.state.engaged) return;
     const rec = this.recordRef.current;
     if (!rec) return;
-    const canAnimate = this.visible && !document.hidden;
     if (canAnimate) this.spin();
     else rec.style.animation = "";
   }
@@ -643,6 +662,7 @@ class Component extends DCLogic {
       muteLabel: muted ? "sound off" : "sound on",
       muted,
       recordRef: this.recordRef,
+      baseSvgRef: this.baseSvgRef,
       armRef: this.armRef,
       glowRef: this.glowRef,
       crateRef: this.crateRef,
