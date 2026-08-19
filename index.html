@@ -290,7 +290,7 @@
 
 
     <div style="position: absolute; left: 94.5%; top: 40%; transform: translateY(-50%); display: flex; align-items: center">
-      <button onClick="{{ toggleMute }}" aria-label="Toggle sound" style="display: flex; align-items: center; justify-content: center; width: clamp(14px, 2.1vw, 38px); height: clamp(14px, 2.1vw, 38px); color: #6E6E7A; background: #FFFFFF; border: 1px solid #E4E3EF; border-radius: 999px; padding: 0; cursor: pointer" style-hover="border-color: #C9C3E6; color: #2B2B33">
+      <button onClick="{{ toggleMute }}" aria-label="Toggle sound" style="display: flex; align-items: center; justify-content: center; width: min(clamp(20px, 2.1vw, 38px), 5.2vw); height: min(clamp(20px, 2.1vw, 38px), 5.2vw); color: #6E6E7A; background: #FFFFFF; border: 1px solid #E4E3EF; border-radius: 999px; padding: 0; cursor: pointer" style-hover="border-color: #C9C3E6; color: #2B2B33">
         <sc-if value="{{ muted }}">
           <svg width="55%" height="55%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"></path><line x1="16" y1="9" x2="22" y2="15"></line><line x1="22" y1="9" x2="16" y2="15"></line></svg>
         </sc-if>
