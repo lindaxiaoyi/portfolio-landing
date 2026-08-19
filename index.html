@@ -88,12 +88,6 @@
           <feComposite in="grainInk" in2="wobble" operator="in" result="grainClipped"></feComposite>
           <feBlend in="wobble" in2="grainClipped" mode="multiply"></feBlend>
         </filter>
-        <filter id="paper" x="0" y="0" width="100%" height="100%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" seed="2" result="g"></feTurbulence>
-          <feColorMatrix in="g" type="matrix" values="0 0 0 0 0.2  0 0 0 0 0.18  0 0 0 0 0.17  0 0 0 0.22 0" result="gi"></feColorMatrix>
-          <feComposite in="gi" in2="SourceGraphic" operator="in" result="gc"></feComposite>
-          <feBlend in="SourceGraphic" in2="gc" mode="multiply"></feBlend>
-        </filter>
       </defs>
       <g transform="translate(0,70)">
 
@@ -129,26 +123,6 @@
         <path d="M 1262 539 C 1332 535 1400 535 1452 539 C 1462 562 1471 587 1479 610 C 1398 606 1302 606 1221 610 C 1231 587 1242 562 1256 539 Z" fill="#EFEADC"></path>
         <path d="M 1264 541 C 1332 537 1400 537 1450 541 C 1451 543 1452 545 1453 547 C 1400 543 1332 543 1266 547 Z" fill="#FFFFFF" opacity="0.9"></path>
 
-        <ellipse cx="1348" cy="574" rx="92" ry="23" fill="#1E1D24" opacity="0.2"></ellipse>
-        <g transform="translate(1348,574) scale(1,0.3)">
-          <g ref="{{ recordRef }}" style="transform-origin: 0px 0px">
-            <circle cx="0" cy="0" r="88" fill="#1C1B21"></circle>
-            <circle cx="0" cy="0" r="84" fill="none" stroke="#3E3D48" stroke-width="1.4"></circle>
-            <circle cx="0" cy="0" r="77" fill="none" stroke="#2E2D36" stroke-width="5"></circle>
-            <circle cx="0" cy="0" r="68" fill="none" stroke="#3A3944" stroke-width="1.2"></circle>
-            <circle cx="0" cy="0" r="59" fill="none" stroke="#2E2D36" stroke-width="5"></circle>
-            <circle cx="0" cy="0" r="50" fill="none" stroke="#3A3944" stroke-width="1.2"></circle>
-            <circle cx="0" cy="0" r="42" fill="none" stroke="#2E2D36" stroke-width="4"></circle>
-            <path d="M 0 0 L -30 -82.7 A 88 88 0 0 1 30 -82.7 Z" fill="#8E8B99" opacity="0.5"></path>
-            <path d="M 0 0 L -14 -86.9 A 88 88 0 0 1 12 -87.2 Z" fill="#B4B1BC" opacity="0.45"></path>
-            <circle cx="0" cy="0" r="31" fill="#D08B6E"></circle>
-            <circle cx="0" cy="0" r="31" fill="none" stroke="#B9714F" stroke-width="1.5"></circle>
-            <circle cx="0" cy="0" r="22" fill="#E9E3D4"></circle>
-            <circle cx="0" cy="0" r="4" fill="#33323A"></circle>
-          </g>
-        </g>
-        <rect x="1346.5" y="556" width="3" height="20" rx="1.5" fill="#C9C4B8"></rect>
-
         <rect x="1452" y="562" width="18" height="6" rx="3" fill="#E3DDCF"></rect>
         <rect x="1452" y="562" width="9" height="6" rx="3" fill="#B9B2A2"></rect>
         <circle cx="1464" cy="577" r="2.6" fill="#C4553C"></circle>
@@ -160,6 +134,31 @@
         <rect x="1224" y="646" width="12" height="6" rx="2" fill="#BDB6A6"></rect>
         <rect x="1464" y="646" width="12" height="6" rx="2" fill="#BDB6A6"></rect>
       </g>
+      <!-- The disc is the only continuously-animating shape in the scene (a 7.5s
+           infinite rotation once playing). Left inside the risoSoft filter above,
+           every spinning frame would force a fresh feTurbulence/feDisplacementMap
+           raster of the whole player body instead of a cheap composited rotation.
+           It sits outside that filter for that reason — its unfiltered edge is not
+           noticeable in motion, or at rest next to the filtered plinth around it. -->
+      <ellipse cx="1348" cy="574" rx="92" ry="23" fill="#1E1D24" opacity="0.2"></ellipse>
+      <g transform="translate(1348,574) scale(1,0.3)">
+        <g ref="{{ recordRef }}" style="transform-origin: 0px 0px">
+          <circle cx="0" cy="0" r="88" fill="#1C1B21"></circle>
+          <circle cx="0" cy="0" r="84" fill="none" stroke="#3E3D48" stroke-width="1.4"></circle>
+          <circle cx="0" cy="0" r="77" fill="none" stroke="#2E2D36" stroke-width="5"></circle>
+          <circle cx="0" cy="0" r="68" fill="none" stroke="#3A3944" stroke-width="1.2"></circle>
+          <circle cx="0" cy="0" r="59" fill="none" stroke="#2E2D36" stroke-width="5"></circle>
+          <circle cx="0" cy="0" r="50" fill="none" stroke="#3A3944" stroke-width="1.2"></circle>
+          <circle cx="0" cy="0" r="42" fill="none" stroke="#2E2D36" stroke-width="4"></circle>
+          <path d="M 0 0 L -30 -82.7 A 88 88 0 0 1 30 -82.7 Z" fill="#8E8B99" opacity="0.5"></path>
+          <path d="M 0 0 L -14 -86.9 A 88 88 0 0 1 12 -87.2 Z" fill="#B4B1BC" opacity="0.45"></path>
+          <circle cx="0" cy="0" r="31" fill="#D08B6E"></circle>
+          <circle cx="0" cy="0" r="31" fill="none" stroke="#B9714F" stroke-width="1.5"></circle>
+          <circle cx="0" cy="0" r="22" fill="#E9E3D4"></circle>
+          <circle cx="0" cy="0" r="4" fill="#33323A"></circle>
+        </g>
+      </g>
+      <rect x="1346.5" y="556" width="3" height="20" rx="1.5" fill="#C9C4B8"></rect>
       </g>
     </svg>
 
@@ -362,6 +361,25 @@ class Component extends DCLogic {
     window.addEventListener("keydown", this.onEsc);
     if (this.reduced) { this.warm(); this.setArm(25); }
     this.bindCrateFocus();
+
+    // The spin is the only continuous animation in the piece. A background
+    // tab already throttles it in most browsers, but an embed scrolled out of
+    // view on a long host page does not get throttled on its own — this
+    // covers that case explicitly rather than relying on it.
+    this.visible = true;
+    this.onVisChange = () => this.syncSpinGate();
+    document.addEventListener("visibilitychange", this.onVisChange);
+    const stageEl = this.crateRef.current && this.crateRef.current.closest(".stage");
+    if (stageEl && "IntersectionObserver" in window) {
+      this.io = new IntersectionObserver(
+        (entries) => {
+          this.visible = entries[entries.length - 1].isIntersecting;
+          this.syncSpinGate();
+        },
+        { threshold: 0 }
+      );
+      this.io.observe(stageEl);
+    }
   }
 
   componentWillUnmount() {
@@ -369,7 +387,20 @@ class Component extends DCLogic {
     window.removeEventListener("pointerup", this.onUp);
     window.removeEventListener("pointercancel", this.onUp);
     window.removeEventListener("keydown", this.onEsc);
+    document.removeEventListener("visibilitychange", this.onVisChange);
+    if (this.io) this.io.disconnect();
     this.stopAudio();
+  }
+
+  // Pauses/resumes the rotation only — engaged/audio state is untouched, so
+  // playback picks the spin back up the instant the embed is visible again.
+  syncSpinGate() {
+    if (!this.state.engaged) return;
+    const rec = this.recordRef.current;
+    if (!rec) return;
+    const canAnimate = this.visible && !document.hidden;
+    if (canAnimate) this.spin();
+    else rec.style.animation = "";
   }
 
   setArm(a) {
