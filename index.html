@@ -365,6 +365,8 @@ class Component extends DCLogic {
     window.addEventListener("keydown", this.onEsc);
     window.addEventListener("pointerdown", this.primeAudio, true);
     window.addEventListener("touchstart", this.primeAudio, true);
+    document.addEventListener("pointerdown", this.onDocPointerDown);
+    document.addEventListener("pointerup", this.onDocPointerUp);
     if (this.reduced) { this.warm(); this.setArm(25); }
     this.bindCrateFocus();
 
@@ -395,6 +397,8 @@ class Component extends DCLogic {
     window.removeEventListener("keydown", this.onEsc);
     window.removeEventListener("pointerdown", this.primeAudio, true);
     window.removeEventListener("touchstart", this.primeAudio, true);
+    document.removeEventListener("pointerdown", this.onDocPointerDown);
+    document.removeEventListener("pointerup", this.onDocPointerUp);
     document.removeEventListener("visibilitychange", this.onVisChange);
     if (this.io) this.io.disconnect();
     this.stopAudio();
@@ -575,6 +579,28 @@ class Component extends DCLogic {
     this.touchStart = null;
     if (!start || Math.abs(e.clientX - start.x) > 12 || Math.abs(e.clientY - start.y) > 12) return;
     this.setState((s) => ({ hoverIndex: s.hoverIndex === null ? 0 : (s.hoverIndex + 1) % SLEEVES.length }));
+  };
+
+  // A finger has no equivalent of leaving the crate, so once a tap raised a
+  // cover it stayed up with nothing to put it away. Any tap that settles
+  // outside the crate now clears it — the job mouseleave does on a desktop.
+  // Taps inside the crate are left alone: the sleeve and whole-crate handlers
+  // have already run by the time this one sees the event bubble up.
+  onDocPointerDown = (e) => {
+    if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
+    this.dismissStart = { x: e.clientX, y: e.clientY };
+  };
+
+  onDocPointerUp = (e) => {
+    if (e.pointerType !== "touch" && e.pointerType !== "pen") return;
+    const start = this.dismissStart;
+    this.dismissStart = null;
+    if (this.state.hoverIndex === null) return;
+    // A finger that travelled is a scroll, not a tap.
+    if (!start || Math.abs(e.clientX - start.x) > 12 || Math.abs(e.clientY - start.y) > 12) return;
+    const t = e.target;
+    if (t && t.closest && (t.closest("g[data-i]") || t.closest(".crate-tap"))) return;
+    this.setState({ hoverIndex: null });
   };
 
   recentTouch() { return Date.now() - (this.lastTouchAt || 0) < 700; }
