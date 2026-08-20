@@ -363,6 +363,8 @@ class Component extends DCLogic {
     window.addEventListener("pointercancel", this.onUp);
     this.onEsc = (e) => { if (e.key === "Escape" && this.state.active !== null) this.setState({ active: null }); };
     window.addEventListener("keydown", this.onEsc);
+    window.addEventListener("pointerdown", this.primeAudio, true);
+    window.addEventListener("touchstart", this.primeAudio, true);
     if (this.reduced) { this.warm(); this.setArm(25); }
     this.bindCrateFocus();
 
@@ -391,6 +393,8 @@ class Component extends DCLogic {
     window.removeEventListener("pointerup", this.onUp);
     window.removeEventListener("pointercancel", this.onUp);
     window.removeEventListener("keydown", this.onEsc);
+    window.removeEventListener("pointerdown", this.primeAudio, true);
+    window.removeEventListener("touchstart", this.primeAudio, true);
     document.removeEventListener("visibilitychange", this.onVisChange);
     if (this.io) this.io.disconnect();
     this.stopAudio();
@@ -590,25 +594,94 @@ class Component extends DCLogic {
     this.setState((s) => (s.hoverIndex === i ? { hoverIndex: null } : null));
   };
 
+  // The fade-in used to step the volume up on a setInterval from silence. In
+  // an iframe on a phone or tablet — a Framer page embedding this — WebKit
+  // throttles timers hard while the frame is not being painted, so the ticks
+  // that were meant to raise the volume simply did not run: playback was
+  // going, at volume 0, and the first scroll woke the timer and the sound
+  // arrived seconds late. Two things fix it. The ramp starts at an already
+  // audible level rather than at zero, so a stalled ramp can never mean
+  // silence, and it is driven off wall-clock time rather than off tick count,
+  // so a late frame computes where the fade should be by now instead of
+  // resuming where it left off. A timeout backstop settles the final value in
+  // case animation frames never come at all.
+  AUDIO_VOL = 0.55;
+  AUDIO_VOL_START = 0.16;
+  AUDIO_FADE_MS = 1400;
+
   startAudio() {
     const a = this.audioRef.current;
     if (!a) return;
-    a.volume = 0;
+    this.clearFade();
+    a.volume = this.AUDIO_VOL_START;
     const p = a.play();
-    if (p && p.catch) p.catch(() => {});
-    clearInterval(this.fade);
-    this.fade = setInterval(() => {
-      if (!this.audioRef.current) return clearInterval(this.fade);
-      const v = Math.min(0.55, this.audioRef.current.volume + 0.04);
-      this.audioRef.current.volume = v;
-      if (v >= 0.55) clearInterval(this.fade);
-    }, 120);
+    // A blocked play() on mobile is not fatal — arm the same one-shot unlock
+    // used before first touch and let the next gesture start it for real.
+    if (p && p.catch) p.catch(() => this.armUnlock());
+    const t0 = (window.performance && performance.now) ? performance.now() : Date.now();
+    // Both clocks drive the same time-based curve, so whichever one the
+    // browser is still servicing keeps the fade smooth and they never fight.
+    const step = () => {
+      const el = this.audioRef.current;
+      if (!el) return true;
+      const now = (window.performance && performance.now) ? performance.now() : Date.now();
+      const k = Math.min(1, (now - t0) / this.AUDIO_FADE_MS);
+      el.volume = this.AUDIO_VOL_START + (this.AUDIO_VOL - this.AUDIO_VOL_START) * k;
+      return k >= 1;
+    };
+    const frame = () => { if (!step()) this.fadeRaf = requestAnimationFrame(frame); };
+    this.fadeRaf = requestAnimationFrame(frame);
+    this.fadeTick = setInterval(() => { if (step()) clearInterval(this.fadeTick); }, 100);
+    this.fadeTimer = setTimeout(() => {
+      const el = this.audioRef.current;
+      if (el && !el.paused) el.volume = this.AUDIO_VOL;
+    }, this.AUDIO_FADE_MS + 100);
+  }
+
+  clearFade() {
+    if (this.fadeRaf) cancelAnimationFrame(this.fadeRaf);
+    clearInterval(this.fadeTick);
+    clearTimeout(this.fadeTimer);
+    this.fadeRaf = null;
+    this.fadeTick = null;
+    this.fadeTimer = null;
   }
 
   stopAudio() {
-    clearInterval(this.fade);
+    this.clearFade();
     const a = this.audioRef.current;
     if (a) { a.pause(); a.volume = 0; }
+  }
+
+  // iOS and Android only let an element make sound once it has been played
+  // from inside a real gesture handler. The needle tap is one, but a tap that
+  // lands on the arm after a drag, or one the browser declines to credit,
+  // otherwise leaves the element locked. Priming it silently on the first
+  // touch anywhere means the tap that drops the needle is always playing an
+  // element the browser has already cleared.
+  primeAudio = () => {
+    const a = this.audioRef.current;
+    if (!a || this.primed || !a.paused) return;
+    this.primed = true;
+    const wasMuted = a.muted;
+    a.muted = true;
+    const p = a.play();
+    const settle = () => { a.pause(); a.currentTime = 0; a.muted = wasMuted; if (this.state.engaged && !this.state.muted) this.startAudio(); };
+    if (p && p.then) p.then(settle, () => { a.muted = wasMuted; this.primed = false; });
+    else settle();
+  };
+
+  armUnlock() {
+    if (this.unlockBound) return;
+    this.unlockBound = true;
+    const go = () => {
+      window.removeEventListener("pointerdown", go, true);
+      window.removeEventListener("touchend", go, true);
+      this.unlockBound = false;
+      if (this.state.engaged && !this.state.muted) this.startAudio();
+    };
+    window.addEventListener("pointerdown", go, true);
+    window.addEventListener("touchend", go, true);
   }
 
   toggleMute = () => {
