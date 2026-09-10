@@ -891,6 +891,36 @@ class Scene {
   };
 }
 
+/* Diagnostic switches, opt in with ?debug= on this page's URL. With no query
+   string none of it runs, so production is untouched. They exist because the
+   parent site is a different origin and cannot reach into this document to
+   A/B the two things that plausibly cost frames while scrolling:
+
+     ?debug=nofilter   drop the riso feTurbulence filters (Chrome rasterises
+                       these on the CPU and is much slower at it than Safari)
+     ?debug=nocat      freeze the cat's SMIL walk cycle, which morphs a 17-curve
+                       path 60x/sec in the same SVG as those filters and may be
+                       invalidating them every frame
+     ?debug=nofilter,nocat   both
+
+   Delete this block once the question is settled. */
+const debugFlags = new URLSearchParams(location.search).get("debug") || "";
+if (debugFlags.includes("nofilter")) {
+  const st = document.createElement("style");
+  st.textContent = ".riso-filtered{filter:none!important}";
+  document.head.appendChild(st);
+}
+if (debugFlags.includes("nocat")) {
+  // pauseAnimations() would be undone by syncMotionGate()'s unpause, and the
+  // path carries no `d` of its own — the animation supplies it — so pin it to
+  // the first keyframe before removing the element, or the cat vanishes.
+  for (const a of document.querySelectorAll("animate")) {
+    const first = (a.getAttribute("values") || "").split(";")[0].trim();
+    if (first && a.parentElement) a.parentElement.setAttribute("d", first);
+    a.remove();
+  }
+}
+
 const scene = new Scene();
 scene.bind();
 scene.render();
